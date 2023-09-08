@@ -1,0 +1,75 @@
+public interface IUser
+{
+    void SetupAccessRight(string right, bool value);
+    bool GetValueOfAccessRight(string right);
+}
+
+public class GenericUser : IUser
+{
+    private readonly HashSet<string> _protectedRights;
+    private readonly Dictionary<string, bool> _accessRights = new Dictionary<string, bool>();
+
+    public GenericUser(HashSet<string> protectedRights)
+    {
+        _protectedRights = protectedRights;
+    }
+
+    public void SetupAccessRight(string right, bool value)
+    {
+        if (!_protectedRights.Contains(right))
+        {
+            _accessRights[right] = value;
+        }
+    }
+
+    public bool GetValueOfAccessRight(string right)
+    {
+        return _accessRights.TryGetValue(right, out var value) && value;
+    }
+}
+
+public class PowerUser : IUser
+{
+    private readonly Dictionary<string, bool> _accessRights = new Dictionary<string, bool>();
+
+    public void SetupAccessRight(string right, bool value)
+    {
+        _accessRights[right] = value;
+    }
+
+    public bool GetValueOfAccessRight(string right)
+    {
+        return _accessRights.TryGetValue(right, out var value) && value;
+    }
+}
+
+public static class DatabaseGateway
+{
+    private const string WriteToDatabase = "write to database";
+
+    private static string Database;
+
+    public static void WriteToDBForce(IUser user, string message)
+    {
+        user.SetupAccessRight(WriteToDatabase, true);
+        WriteToDB(message);
+    }
+
+    public static void WriteToDB(string message)
+    {
+        if (DatabaseAccessAllowed())
+        {
+            Database = message;
+        }
+    }
+
+    public static string ReadFromDB()
+    {
+        return Database;
+    }
+
+    private static bool DatabaseAccessAllowed()
+    {
+        return true; // Implement your access control logic here
+    }
+}
